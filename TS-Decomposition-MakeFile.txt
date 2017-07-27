@@ -1,0 +1,98 @@
+
+#The following analysis and visualization performs classical and STL decomposition of time series data on passenger vehicle production in the United Kingdom.
+
+
+##Data Import from 'FPP' Library & Time Series Visualization
+
+###The plot consists of 18 years (1977-2004) of data on quarterly production (in thousands of cars), demonstrating positive trend and annual seasonal fluctuation over the course of the interval.
+
+
+library(fpp)
+
+data(ukcars)
+plot(ukcars)
+
+
+##Classical Decomposition
+###Trend cycle and seasonal indices were first calculated and visualized using classical decomposition, verifying the annual seasonal pattern and the range of the overall positive trend, with extrema at 1979 Q3 (171.153) and 2001 Q1 (494.311).
+
+
+fitd <- decompose(ukcars)
+plot(fitd)
+
+
+##Seasonal Adjustment
+###The analysis proceeded by computing and plotting the seasonally adjusted data, which no longer exhibits the characteristic annual peak-and-valley pattern of variation.
+
+
+cars_adj <- seasadj(fitd)
+plot(ukcars)
+plot(cars_adj)
+
+
+##EDA: Outlier Effects
+###To observe its effects, an outlying value (+500) was added to the data for 1993 Q3 before recomputing the seasonal adjustment, which leaves intact the unusual (non-seasonal) peak of the data point in the subsequent comparative visualization.
+
+
+cars2 <- ts(c(ukcars[1:66],ukcars[67]+500,ukcars[68:113]),start=c(1977,1),frequency=4)
+
+ukcars[65:68]
+
+#Now becomes:
+
+cars2[65:68]
+
+fitd2 <- decompose(cars2)
+cars_adj2 <- seasadj(fitd2)
+
+plot(cars2)
+plot(cars_adj2)
+
+
+##EDA (Part 2): Outlier Effects
+###By comparison, the outlying value (+500) was instead added to the data for 2004 Q2 before recomputing the seasonal adjustment, which reproduces the same unusual peak at the end of the time series. While calculation of a moving average may be affected by the location of an outlier with respect to a given time window, the seasonal adjustment is made to the entire length of time series, leaving the effect unaltered.
+
+
+cars3 <- ts(c(ukcars[1:109],ukcars[110]+500,ukcars[111:113]),start=c(1977,1),frequency=4)
+
+ukcars[109:112]
+
+#Now becomes:
+
+cars3[109:112]
+
+fitd3 <- decompose(cars3)
+cars_adj3 <- seasadj(fitd3)
+
+plot(cars3)
+plot(cars_adj3)
+
+
+##STL Decomposition
+###As a final evaluation of features of the time series, seasonal and trend decomposition was performed using locally estimated scatterplot smoothing (LOESS), producing the comparative visualization of the three time series below.
+
+
+fit <- stl(ukcars, s.window = 5)
+fit2 <- stl(cars2, s.window = 5)
+fit3 <- stl(cars3, s.window = 5)
+
+plot(fit)
+plot(fit2)
+plot(fit3)
+
+
+##For comparative visual assessment, overlaid fits of STL decomposition are applied to the original time series data, and to the two series including artificial outliers as well.
+
+
+par(mfrow = c(3,1))
+
+plot(ukcars)
+lines(fit$time.series[,2],col="red",ylab="Trend")
+
+plot(cars2)
+lines(fit2$time.series[,2],col="red",ylab="Trend")
+
+plot(cars3)
+lines(fit3$time.series[,2],col="red",ylab="Trend")
+
+
